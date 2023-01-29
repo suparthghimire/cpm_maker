@@ -4,6 +4,9 @@ export default class Node {
   private m_lst: number = 0;
   private m_lft: number = 0;
   private m_slack: number = 0;
+  public drawn = false;
+  public x = 0;
+  public y = 0;
   constructor(
     private m_name: string,
     private m_duration: number,

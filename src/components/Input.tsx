@@ -8,6 +8,7 @@ import {
   Table,
   Flex,
   NumberInput,
+  Modal,
   Box,
   Space,
 } from "@mantine/core";
@@ -16,14 +17,18 @@ import { Trash } from "tabler-icons-react";
 import CPM from "../model/CPM";
 import { CPMTable } from "../@types";
 import { TEST_DATA } from "../utils/constant";
-
+import Graph from "./Graph";
+import Node from "../model/Node";
+import { useState } from "react";
 export default function Input() {
+  const [nodes, setNodes] = useState<Node[] | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const form = useForm({
     initialValues: {
       activityCount: TEST_DATA.length,
       criticalPath: [] as string[],
       projectDuration: -1,
-      activities: TEST_DATA as CPMTable,
+      activities: TEST_DATA[1] as CPMTable,
     },
   });
 
@@ -104,6 +109,10 @@ export default function Input() {
         onSubmit={form.onSubmit((values) => {
           const cpm = new CPM(values.activities);
           const table = cpm.Calculate();
+
+          setNodes(cpm.nodes);
+          localStorage.setItem("activities", JSON.stringify(cpm.nodes));
+
           form.setFieldValue("criticalPath", cpm.critical_path);
           form.setFieldValue("projectDuration", cpm.total_duration);
           form.setFieldValue("activities", table);
@@ -160,7 +169,15 @@ export default function Input() {
           <Button type="submit" size="md" color="orange" variant="light">
             Calculate
           </Button>
-          <Button size="md" color="grape" variant="light">
+          <Button
+            disabled={nodes === null}
+            size="md"
+            color="grape"
+            variant="light"
+            onClick={() => {
+              setModalOpen(true);
+            }}
+          >
             Generate Graph
           </Button>
         </Flex>
@@ -205,6 +222,14 @@ export default function Input() {
           </Text>
         )}
       </form>
+      <Modal
+        fullScreen
+        title="Generated Graph"
+        onClose={() => setModalOpen(false)}
+        opened={modalOpen}
+      >
+        {nodes !== null && <Graph nodes={nodes} />}
+      </Modal>
     </Container>
   );
 }
