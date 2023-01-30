@@ -1,13 +1,21 @@
 import Sketch from "react-p5";
 import p5Types from "p5";
 import Node from "../model/Node";
+import { useMantineTheme } from "@mantine/core";
 
 const sqSize = 40;
 let dragNode: Node | null = null;
 
+const windowXOffset = 40;
+const windowYOffset = 92;
+
 export default function Graph({ nodes }: { nodes: Node[] }) {
+  const theme = useMantineTheme();
   const setup = (p5: p5Types, canvasParentRef: Element) => {
-    p5.createCanvas(window.innerWidth, 800).parent(canvasParentRef);
+    p5.createCanvas(
+      window.innerWidth - windowXOffset,
+      window.innerHeight - windowYOffset
+    ).parent(canvasParentRef);
   };
 
   function mousePressed(p5: p5Types) {
@@ -19,7 +27,7 @@ export default function Graph({ nodes }: { nodes: Node[] }) {
       );
       //   if (nodes[i]) {
       if (isPressed) {
-        console.log("dragging " + nodes[i].name);
+        p5.cursor("grabbing");
         dragNode = nodes.splice(i, 1)[0];
         nodes.push(dragNode);
         break;
@@ -51,7 +59,7 @@ export default function Graph({ nodes }: { nodes: Node[] }) {
     p5.fill(255);
     p5.noStroke();
 
-    p5.textSize(20);
+    p5.textSize(25);
     p5.stroke(0);
 
     p5.square(node.x + 40, node.y + 40, sqSize + 80);
@@ -120,7 +128,7 @@ export default function Graph({ nodes }: { nodes: Node[] }) {
     p5.noStroke();
   }
   const draw = (p5: p5Types) => {
-    p5.background(240);
+    p5.background(theme.colors.dark[9]);
     p5.noStroke();
 
     let visited = new Array(nodes.length).fill(false);
@@ -135,7 +143,8 @@ export default function Graph({ nodes }: { nodes: Node[] }) {
 
       // draw line from current node to successors's x and y
 
-      p5.stroke(0);
+      p5.stroke(255);
+      p5.strokeWeight(4);
       node.successors.forEach((s) => {
         const sNode = nodes.find((n) => n.name === s) as Node;
         p5.line(
@@ -145,6 +154,7 @@ export default function Graph({ nodes }: { nodes: Node[] }) {
           sNode.y + 100
         );
       });
+      p5.strokeWeight(1);
       p5.noStroke();
 
       // if (node.successors.length > 1) {
@@ -171,12 +181,40 @@ export default function Graph({ nodes }: { nodes: Node[] }) {
 
     // create an array of length same as nodes and fill them all with false
   };
+  function windowResized(p5: p5Types) {
+    p5.resizeCanvas(
+      window.innerWidth - windowXOffset,
+      window.innerHeight - windowYOffset
+    );
+  }
 
+  function mouseMoved(p5: p5Types) {
+    // check if cursor is over a node
+    // if yes change cursor to pointer
+    // else change cursor to default
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      const isPressed = mouseInSq(
+        p5,
+        { x: nodes[i].x, y: nodes[i].y },
+        sqSize + 80
+      );
+      //   if (nodes[i]) {
+      if (isPressed) {
+        p5.cursor("grab");
+        break;
+      } else {
+        p5.cursor(p5.ARROW);
+      }
+    }
+    // console.log(p5.mouseX, p5.mouseY);
+  }
   return (
     <Sketch
       mousePressed={mousePressed}
       mouseDragged={mouseDragged}
       mouseReleased={mouseReleased}
+      windowResized={windowResized}
+      mouseMoved={mouseMoved}
       setup={setup}
       draw={draw}
     />
